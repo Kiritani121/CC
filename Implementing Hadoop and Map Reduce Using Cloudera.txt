@@ -1,0 +1,137 @@
+1. Download Cloudera Quickstart VM
+2. Extract the files
+3. Open Oracle virtual box
+4. Import VM
+5. Keep clicking on next:
+6. The Machine will be added
+7. Go to Settings, and Select 8 GB RAM and 2 CPUs:
+8. Click OK and Start the VM, and Click Allow Access.
+9. Start Eclipse
+10. Create a new Java Project, give it a Name and click Finish
+11.	Right Click on created file name>>Build Path>> Configure Build path
+12.	Add External Jars
+	/usr/lib/hadoop-0.20-mapreduce/hadoop-core-2.6.0-mr1-cdh5.13.0.jar 
+	/usr/lib/hadoop/hadoop-common-2.6.0-cdh5.13.0.jar
+13.	Create Package
+	Right Click on project>> New>>Package
+	Give it a name and click finish
+14.	Create Class
+	Right click package > New > Class
+15.	Write code
+	WC_driver.java:
+	package wordcount;
+
+	import java.io.IOException;
+
+	import org.apache.hadoop.fs.Path;
+	import org.apache.hadoop.io.IntWritable;
+	import org.apache.hadoop.io.Text;
+	import org.apache.hadoop.mapred.FileInputFormat;
+	import org.apache.hadoop.mapred.FileOutputFormat;
+	import org.apache.hadoop.mapred.JobClient;
+	import org.apache.hadoop.mapred.JobConf;
+	import org.apache.hadoop.mapred.TextInputFormat;
+	import org.apache.hadoop.mapred.TextOutputFormat;
+
+	public class WC_driver {
+
+		public static void main(String[] args) throws IOException 
+		{ 
+			JobConf conf = new JobConf(WC_driver.class);  
+			conf.setJobName("CharCount");  
+			conf.setOutputKeyClass(Text.class);  
+			conf.setOutputValueClass(IntWritable.class);  
+			conf.setMapperClass(WC_mapper.class);  
+			conf.setCombinerClass(WC_reducer.class);  
+			conf.setReducerClass(WC_reducer.class); 
+			conf.setInputFormat(TextInputFormat.class);  
+			conf.setOutputFormat(TextOutputFormat.class);
+			FileInputFormat.setInputPaths(conf,new Path(args[0])); 
+			FileOutputFormat.setOutputPath(conf,new Path(args[1])); 
+			JobClient.runJob(conf);  
+		}
+	}
+
+	WC_reducer.java:
+
+	package wordcount;
+
+	import java.io.IOException;
+	import java.util.Iterator;
+	import org.apache.hadoop.io.IntWritable;
+	import org.apache.hadoop.io.Text;
+	import org.apache.hadoop.mapred.MapReduceBase;
+	import org.apache.hadoop.mapred.OutputCollector;
+	import org.apache.hadoop.mapred.Reducer;
+	import org.apache.hadoop.mapred.Reporter;
+
+	public class WC_reducer extends MapReduceBase implements  Reducer<Text,IntWritable,Text,IntWritable> 
+	{
+		public void reduce(Text key, Iterator<IntWritable>values,OutputCollector<Text,IntWritable> output,  Reporter reporter) throws IOException 
+		{  
+			int sum=0;  
+			while (values.hasNext()) {  
+				sum+=values.next().get();  
+			}  
+			output.collect(key,new IntWritable(sum));  
+		}  
+	}
+
+	WC_mapper.java:
+	package wordcount;
+
+	import java.io.IOException;  
+	import org.apache.hadoop.io.IntWritable;  
+	import org.apache.hadoop.io.LongWritable;  
+	import org.apache.hadoop.io.Text;  
+	import org.apache.hadoop.mapred.MapReduceBase; 
+	import org.apache.hadoop.mapred.Mapper;  
+	import org.apache.hadoop.mapred.OutputCollector;  
+	import org.apache.hadoop.mapred.Reporter;  
+
+	public class WC_mapper extends MapReduceBase implements Mapper<LongWritable,Text,Text,IntWritable>
+	{
+		public void map(LongWritable key, Text value,OutputCollector<Text,IntWritable> output,  Reporter reporter) throws IOException 
+		{  
+			String line = value.toString();  
+			String tokenizer[] = line.split("");  
+			for(String SingleChar : tokenizer)
+			{  
+				Text charKey = new Text(SingleChar);  
+				IntWritable One = new IntWritable(1);  
+				output.collect(charKey, One);  
+			} 
+		}  
+	}
+16. Create Jar file:
+	Right click project>Export
+	Select>Java>Jar File and click Next
+	Select export destination and finish
+	The file is created
+17. Open Terminal
+	Go to Computer on desktop>On file>Select Open in terminal
+	Commands
+		1. Check if any files already exist: hadoop fs -ls
+		No files shown, hence no files exist.
+		2. Make directory: hadoop fs –mkdir /user/cloudera/input
+		Check the created directory/folder:
+		3. Create a file and enter some content: cat > File1
+		4.Put the created file in hadoop file system:
+ 		hadoop fs –put File1 /user/cloudera/input
+ 		Check The created file: hadoop fs -ls input
+		5. Run the jar file: hadoop jar charcount1.jar wordcount.WC_driver /user/cloudera/input/File1 /user/cloudera/output
+		Check the output folder: hadoop fs -ls output
+		Check Output: hadoop fs -cat output/part-00000
+		Letter count is found!
+18.	Mapreduce with two files:
+	Create another file: cat > file2
+	Put the file in Hadoop file system:
+	hadoop fs -put file2 /user/cloudera/input
+	hadoop fs -ls input
+	Run the jar file:
+	hadoop jar charcount1.jar wordcount.WC_driver /user/cloudera/input/F* /user/cloudera/outputs
+	Check the output directory: 
+	hadoop fs -ls outputs
+	hadoop fs -cat outputs/part-00000
+ 	Combined letter count of both files is shown.
+	For showing WORD COUNT put “ “ in the mapper code.
