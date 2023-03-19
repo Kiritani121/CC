@@ -1,0 +1,175 @@
+DateTimeServer.java
+import java.net.*;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.rmi.registry.Registry;
+
+public class DateTimeServer {
+    public static void main(String args[]) {
+        try {
+            Registry r = java.rmi.registry.LocateRegistry.createRegistry(1099);
+            DateTimeImpl objDateTime = new DateTimeImpl();
+            Naming.rebind("DateTime", objDateTime);
+            System.out.println("Object is loaded in repository");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+
+DateTimeClient.java
+import java.net.*;
+import java.rmi.*;
+import java.io.*;
+import java.util.*;
+
+public class DateTimeClient{
+    public static void main(String args[]){
+        DateTimeinterface DTI;
+        System.out.println("Hello!");
+        try{
+            DTI = (DateTimeinterface) Naming.lookup("//127.0.0.1:1099/DateTime");
+            String Ans = DTI.getTime();
+            System.out.println("Current Date & Time is - " + Ans);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+}
+
+DateTimeImpl.java
+import java.net.*;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.util.*;
+
+public class DateTimeImpl extends UnicastRemoteObject implements DateTimeinterface {
+    public DateTimeImpl() throws RemoteException {
+    }
+
+    public String getTime() {
+        String Reply = "";
+        try {
+            Date CurrentDT = new Date();
+            Reply = CurrentDT.toString();
+        } catch (Exception e) {
+            System.out.println("Error is :" + e.toString());
+        }
+        return Reply;
+    }
+}
+
+DateTimeInterface.java
+import java.net.*;
+import java.rmi.*;
+
+interface DateTimeInterface extends Remote {
+    public String getTime() throws RemoteException;
+}
+
+edtServer.java
+import java.net.*;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.rmi.registry.Registry;
+
+public class edtServer {
+    public static void main(String args[]) {
+        try {
+            Registry r = java.rmi.registry.LocateRegistry.createRegistry(1099);
+            edtImpl edtObj = new edtImpl();
+            Naming.rebind("EkDoTeen", edtObj);
+            System.out.println("Object is loaded in repository");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+
+edtClient.java
+import java.net.*;
+import java.rmi.*;
+import java.io.*;
+import java.util.*;
+
+public class edtClient{
+    public static void main(String args[]){
+        edtinterface edi;
+        System.out.println("Hello!");
+        try{
+            edi = (edtinterface) Naming.lookup("//127.0.0.1:1099/EkDoTeen");
+            System.out.println("Enter Number: ");
+            Scanner scn = new Scanner(System.in);
+            long n = scn.nextLong();
+            String Ans = edi.convert(n);
+            System.out.println("Converted Answer is - " + Ans);
+            scn.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+}
+
+edtImpl.java
+import java.net.*;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.util.*;
+
+public class edtImpl extends UnicastRemoteObject implements edtinterface {
+    public edtImpl() throws RemoteException {
+    }
+
+    public String convert(Long i) {
+        String Reply = "";
+        String inte = Long.toString(i);
+        String[]  arr=inte.split("");
+        for(String s:arr){
+            switch (s){
+                case "1":
+                    Reply += " One";
+                    break;
+                case "2":
+                    Reply += " Two";
+                    break;
+                case "3":
+                    Reply += " Three";
+                    break;
+                case "4":
+                    Reply += " Four";
+                    break;
+                case "5":
+                    Reply += " Five";
+                    break;
+                case "6":
+                    Reply += " Six";
+                    break;
+                case "7":
+                    Reply += " Seven";
+                    break;
+                case "8":
+                    Reply += " Eight";
+                    break;
+                case "9":
+                    Reply += " Nine";
+                    break;
+                case "0":
+                    Reply += " Zero";
+                    break;
+            }
+        }
+        return Reply;
+    }
+}
+
+edtInterface.java
+import java.net.*;
+import java.rmi.*;
+
+interface edtinterface extends Remote {
+    public String convert(Long i) throws RemoteException;
+}

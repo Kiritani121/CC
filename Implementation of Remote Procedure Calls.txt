@@ -1,0 +1,232 @@
+CalcServer.java
+import java.util.*;
+import java.net.*;
+
+public class CalcServer {
+    DatagramSocket sock, clientSock;
+    DatagramPacket packet, packet2;
+    String strInput, strMethod, strResult;
+    double val1, val2;
+    int serverPortNum = 1200, clientPortNum = 1300;
+
+    CalcServer() {
+        try {
+            sock = new DatagramSocket(1200);
+            byte b[] = new byte[4096];
+            while (true) {
+                System.out.println("Server started listening on port: " + serverPortNum + "\n");
+                // Recieving packet
+                packet = new DatagramPacket(b, b.length);
+                sock.receive(packet);
+
+                strInput = new String(packet.getData(), 0, packet.getLength());
+                if (strInput.equalsIgnoreCase("q")) {
+                    strResult = "Server has quit successfully";
+                    byte b1[] = strResult.getBytes();
+                    clientSock = new DatagramSocket();
+                    packet2 = new DatagramPacket(b1, b1.length, InetAddress.getLocalHost(), clientPortNum);
+                    System.out.println("Result : " + strResult + "\n");
+                    clientSock.send(packet2);
+                    clientSock.close();
+                    System.exit(0);
+                } else {
+                    StringTokenizer st = new StringTokenizer(strInput, " ");
+                    // int i=0;
+                    while (st.hasMoreTokens()) {
+                        String token = st.nextToken();
+                        strMethod = token;
+                        val1 = Double.parseDouble(st.nextToken());
+                        val2 = Double.parseDouble(st.nextToken());
+                    }
+                }
+                System.out.println(strInput);
+                // InetAddress ia = InetAddress.getLocalHost();
+                if (strMethod.equalsIgnoreCase("add")) {
+                    strResult = "" + add(val1, val2);
+                } else if (strMethod.equalsIgnoreCase("sub")) {
+                    strResult = "" + sub(val1, val2);
+                } else if (strMethod.equalsIgnoreCase("mul")) {
+                    strResult = "" + mul(val1, val2);
+                } else if (strMethod.equalsIgnoreCase("div")) {
+                    strResult = "" + div(val1, val2);
+                }
+                byte b1[] = strResult.getBytes();
+                clientSock = new DatagramSocket();
+                packet2 = new DatagramPacket(b1, b1.length, InetAddress.getLocalHost(), clientPortNum);
+                System.out.println("Result : " + strResult + "\n");
+                clientSock.send(packet2);
+                clientSock.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public double add(double val1, double val2) {
+        return (val1 + val2);
+    }
+
+    public double sub(double val1, double val2) {
+        return (val1 - val2);
+    }
+
+    public double mul(double val1, double val2) {
+        return (val1 * val2);
+    }
+
+    public double div(double val1, double val2) {
+        return (val1 / val2);
+    }
+
+    public static void main(String[] args) {
+        new CalcServer();
+    }
+}
+
+FunctionServer.java
+import java.util.*;
+import java.net.*;
+
+public class FunctionServer {
+    DatagramSocket sock;
+    DatagramPacket packet;
+    String strInput, strMethod, strResult;
+    int num;
+    int serverPortNum = 1200, clientPortNum = 1300;
+    FunctionServer(){
+        try {
+            sock = new DatagramSocket(1200);
+            byte b[] = new byte[4096];
+            while (true){
+                //Recieving packet
+                packet = new DatagramPacket(b, b.length);
+                sock.receive(packet);
+
+                strInput = new String(packet.getData(),0,packet.getLength());
+                if (strInput.equalsIgnoreCase("q")){
+                    System.exit(0);
+                }
+
+                else
+                {
+                    StringTokenizer st = new StringTokenizer(strInput," ");
+                    while(st.hasMoreTokens())
+                    {
+                        String token=st.nextToken();
+                        strMethod=token;
+                        num = Integer.parseInt(st.nextToken());
+                    }
+                }
+                System.out.println(strInput);
+                // InetAddress ia = InetAddress.getLocalHost();
+                if(strMethod.equalsIgnoreCase("square"))
+                {
+                    strResult="" + square(num);
+                }
+                else if(strMethod.equalsIgnoreCase("sqrt"))
+                {
+                    strResult="" +Math.sqrt(num);
+                }
+                else if(strMethod.equalsIgnoreCase("cube"))
+                {
+                    strResult="" + cube(num);
+                }
+                else if(strMethod.equalsIgnoreCase("cbrt"))
+                {
+                    strResult="" + Math.cbrt(num);
+                }
+                else if(strMethod.equalsIgnoreCase("fact"))
+                {
+                    strResult="" + factorial(num);
+                }
+                else if(strMethod.equalsIgnoreCase("fib"))
+                {
+                    strResult=fib(num);
+                }
+                byte b1[] = strResult.getBytes();
+                DatagramSocket clientSock = new DatagramSocket();
+                DatagramPacket packet2 = new DatagramPacket(b1, b1.length, InetAddress.getLocalHost(), clientPortNum);
+                System.out.println("Result : " +strResult+ "\n");
+                clientSock.send(packet2);
+                clientSock.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int square(int num){
+        return num*num;
+    }
+
+    public int cube(int num){
+        return num*num*num;
+    }
+
+    public int factorial(int num){
+        int fact = 1;
+        for(;num >= 1;num--){
+            fact *= num;
+        }
+        return fact;
+    }
+
+    public String fib(int length){
+        int fibVal = 0, a = 0, b = 1;
+        String seq = "";
+        for (;length > 0; length-- ){
+            fibVal = a + b;
+            seq = seq.concat(Integer.toString(a)+" ,");
+            a = b;
+            b = fibVal;
+        }
+        return seq;
+    }
+
+    public static void main(String[] args) {
+        new FunctionServer();
+    }
+}
+
+CalcClient.java
+import java.io.*;
+import java.net.*;
+
+public class CalcClient {
+    int serverPortNum = 1200, clientPortNum = 1300;
+    DatagramSocket serverSock;
+    DatagramSocket clientSock;
+
+    CalcClient() {
+        try {
+            InetAddress objlA = InetAddress.getLocalHost();
+            serverSock = new DatagramSocket();
+            clientSock = new DatagramSocket(clientPortNum);
+            System.out.println("\nRPC Client");
+            System.out.println("Enter method name and parameter like add 5 2:\n");
+            while (true) {
+                BufferedReader objBr = new BufferedReader(new InputStreamReader(System.in));
+                String strInput = objBr.readLine();
+                byte sendData[] = strInput.getBytes();
+                byte recData[] = new byte[40960];
+                DatagramPacket objDP = new DatagramPacket(sendData, sendData.length, objlA, 1200);
+                serverSock.send(objDP);
+                objDP = new DatagramPacket(recData, recData.length);
+                clientSock.receive(objDP);
+                String s = new String(objDP.getData(), 0, objDP.getLength());
+                System.out.println("Result = " + s + "\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            serverSock.close();
+            clientSock.close();
+        }
+    }
+
+    public static void main(String[] args) {
+        new CalcClient();
+    }
+}
+
+
